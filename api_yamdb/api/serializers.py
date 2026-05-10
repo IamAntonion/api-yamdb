@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from .utils import send_confurm_mail
 from django.utils.crypto import get_random_string
 
+from reviews.models import Category, Genre, Title
+
 
 User = get_user_model()
 
@@ -99,3 +101,64 @@ class UserMeSerializer(serializers.ModelSerializer):
             'first_name': {'required': False},
             'last_name': {'required': False},
         }
+
+
+class CategorySerializer(serializers.Serializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+
+class GenreSerializer(serializers.Serializer):
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug')
+
+
+class TitleSerializer(serializers.Serializer):
+    genre = GenreSerializer(
+        many=True,
+        read_only=True
+    )
+    category = CategorySerializer(
+        read_only=True
+    )
+    rating = serializers.IntegerField(
+        read_only=True
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
+        )
+        read_only_fields = fields
+
+
+class TitleCreateSerializer(serializers.Serializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+
+    class Meta:
+        model = Title
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category'
+        )
