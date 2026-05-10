@@ -11,12 +11,17 @@ from reviews.models import (
     Title,
     Review,
     Comment,
-    User
+    ROLE_CHOICES
+    # User
 )
+
 
 from .utils import send_confurm_mail
 
 import re
+
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -193,13 +198,13 @@ class TokenSerializer(serializers.Serializer):
     def validate(self, data):
         username = data.get('username')
         code = data.get('confirmation_code')
-        user = get_object_or_404(
-            User,
-            username=username,
-            confirmation_code=code)
-        user.confirmation_code = ''
-        user.save()
-        return user
+        user = get_object_or_404(User, username=username)
+        if user.confirmation_code == code:
+            user.confirmation_code = ''
+            user.save()
+            return user
+        else:
+            raise serializers.ValidationError('Неверный confirmation_code')
 
     # def validate(self, data):
     #     username = data.get('username')
@@ -219,6 +224,7 @@ class TokenSerializer(serializers.Serializer):
 
     #     return {'user': user}
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -228,11 +234,16 @@ class UserSerializer(serializers.ModelSerializer):
                   'last_name',
                   'bio',
                   'role')
-        read_only_fields = ('id', 'date_joined''role')
+        read_only_fields = ('id', 'date_joined')
+
+    def update(self, instance, validated_data):
+        validated_data.pop('role', None)
+        return super().update(instance, validated_data)
+
 
 
 class UserMeSerializer(serializers.ModelSerializer):
-    # read_only_fields = ('username', 'email', 'role')
+    read_only_fields = ('username', 'email', 'role')
 
     class Meta:
         model = User
@@ -249,3 +260,5 @@ class UserMeSerializer(serializers.ModelSerializer):
             'first_name': {'required': False},
             'last_name': {'required': False},
         }
+
+    

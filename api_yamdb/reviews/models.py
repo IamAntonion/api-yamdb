@@ -3,6 +3,13 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
+ROLE_CHOICES = [
+    ('user', 'User'),
+    ('admin', 'Admin'),
+    ('moderator', 'Moderator'),
+]
+
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     confirmation_code = models.SlugField(default='0',)
@@ -12,11 +19,7 @@ class User(AbstractUser):
         blank=True,
         verbose_name="О себе"
     )
-    ROLE_CHOICES = [
-        ('user', 'User'),
-        ('admin', 'Admin'),
-        ('moderator', 'Moderator'),
-    ]
+
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,

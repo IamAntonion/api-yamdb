@@ -136,7 +136,7 @@ class TokenView(generics.GenericAPIView):
 
 class UserViewSet(viewsets.ModelViewSet):
 
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
     permission_classes = [IsAdmin,]
 
@@ -144,6 +144,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     search_fields = ('username',)
     pagination_class = UserPagination
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
         detail=False,
