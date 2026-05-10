@@ -26,10 +26,8 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'rest_framework',
     'rest_framework_simplejwt',
-    'api',
     'djoser',
     'django_filters',
-    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -95,14 +93,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': [
+        'rest_framework.pagination.PageNumberPagination'],
     'PAGE_SIZE': 10,
     'MAX_PAGE_SIZE': 100,
     'PAGE_SIZE_QUERY_PARAM': 'page_size',
 }
 
-AUTH_USER_MODEL = 'api.User'
-
+AUTH_USER_MODEL = 'reviews.User'
 
 # Internationalization
 
@@ -123,15 +121,8 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',],
-}
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),

@@ -1,17 +1,27 @@
 from rest_framework import permissions
 
-# ЗАМЕТКА ДЛЯ РАЗРАБОТЧИКА №1 (Auth/User):
-# Добавь эти свойства в свою модель User.
-# Это позволит нам не писать везде "user.role == 'admin'",
-# а использовать лаконичное "user.is_admin".
-# class User(AbstractUser):
-#     # ... твои поля (bio, role и т.д.) ...
-#     @property
-#     def is_admin(self):
-#         return self.role == 'admin' or self.is_superuser or self.is_staff
-#     @property
-#     def is_moderator(self):
-#         return self.role == 'moderator'
+
+class IsAdmin(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return (
+            user.is_authenticated
+            and user.is_admin
+        )
+
+
+class IsModerator(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return (
+            user.is_authenticated
+            and user.is_moderator
+        )
+
+
+class IsAuthenticatedUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
 
 
 class IsAuthorModeratorAdminOrReadOnly(permissions.BasePermission):
@@ -30,22 +40,10 @@ class IsAuthorModeratorAdminOrReadOnly(permissions.BasePermission):
             or request.user.is_admin
         )
 
-      class IsModerator(permissions.BasePermission):
+
+class IsAdminUserOrReadOnly(IsAdmin):
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        if (request.user.is_authenticated
-                and request.user.is_moderator
-                and request.method == 'DELETE'):
-            return True
-
-
-class IsAdmin(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return (request.user
-                and request.user.role == 'admin')
-
-
-class IsAuthenticatedUser(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated
+        return (
+            request.method in permissions.SAFE_METHODS
+            or super().has_permission(request, view)
+        )
