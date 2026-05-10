@@ -55,7 +55,7 @@ class Command(BaseCommand):
                 )
         self.stdout.write(
             self.style.SUCCESS('Произведения успешно загружены.')
-            )
+        )
 
     def load_reviews(self):
         file_path = os.path.join(DATA_DIR, 'review.csv')
@@ -101,4 +101,4 @@ class Command(BaseCommand):
                 )
         self.stdout.write(
             self.style.SUCCESS('Пользователи успешно загружены.')
-            )
+        )
