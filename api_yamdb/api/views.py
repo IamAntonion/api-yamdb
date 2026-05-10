@@ -114,7 +114,7 @@ class SignUpView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         """
         Регистрация пользователя.
-        
+
         Возвращает username и email.
         """
         serializer = self.get_serializer(data=request.data)

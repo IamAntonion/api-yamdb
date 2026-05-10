@@ -53,7 +53,9 @@ class Command(BaseCommand):
                     year=row['year'],
                     category_id=row['category'],
                 )
-        self.stdout.write(self.style.SUCCESS('Произведения успешно загружены.'))
+        self.stdout.write(
+            self.style.SUCCESS('Произведения успешно загружены.')
+            )
 
     def load_reviews(self):
         file_path = os.path.join(DATA_DIR, 'review.csv')
@@ -97,4 +99,6 @@ class Command(BaseCommand):
                     first_name=row['first_name'],
                     last_name=row['last_name'],
                 )
-        self.stdout.write(self.style.SUCCESS('Пользователи успешно загружены.'))
+        self.stdout.write(
+            self.style.SUCCESS('Пользователи успешно загружены.')
+            )
