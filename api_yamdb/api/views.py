@@ -17,20 +17,17 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import TitleFilter
-
+from .pagination import UserPagination
 from .permissions import (
     IsAdmin,
-    IsModerator,
     IsAdminUserOrReadOnly,
     IsAuthorModeratorAdminOrReadOnly,
     IsAuthenticatedUser
 )
-from .pagination import UserPagination
 from .serializers import (
     SignUpSerializer,
     TokenSerializer,
     UserSerializer,
-    UserMeSerializer,
     CategorySerializer,
     GenreSerializer,
     TitleCreateSerializer,
@@ -51,6 +48,8 @@ User = get_user_model()
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """ViewSet для работы с отзывами."""
+
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAuthorModeratorAdminOrReadOnly,
@@ -65,16 +64,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
     ]
 
     def get_title(self):
+        """Возвращает произведение."""
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
+        """Возвращает список комметариев к произведению."""
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
+        """Сохраняет произведение."""
         serializer.save(author=self.request.user, title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """ViewSet для работы с комментариями."""
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorModeratorAdminOrReadOnly,)
 
@@ -86,6 +90,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     ]
 
     def get_review(self):
+        """Возвращает отзыв."""
         return get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
@@ -93,17 +98,25 @@ class CommentViewSet(viewsets.ModelViewSet):
         )
 
     def get_queryset(self):
+        """Возвращает список комметариев к отзыву."""
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
+        """Сохраняет комментарий."""
         serializer.save(author=self.request.user, review=self.get_review())
 
 
 class SignUpView(generics.CreateAPIView):
+    """Регистрация пользователя."""
 
     serializer_class = SignUpSerializer
 
     def create(self, request, *args, **kwargs):
+        """
+        Регистрация пользователя.
+        
+        Возвращает username и email.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -117,10 +130,12 @@ class SignUpView(generics.CreateAPIView):
 
 
 class TokenView(generics.GenericAPIView):
+    """Получение JWT-токена."""
 
     serializer_class = TokenSerializer
 
     def post(self, request):
+        """Проверяет confirmation_code и выдает JWT-токен"""
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -135,6 +150,7 @@ class TokenView(generics.GenericAPIView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления пользователем."""
 
     queryset = User.objects.all().order_by('id')
     serializer_class = UserSerializer
@@ -153,6 +169,9 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticatedUser]
     )
     def self_account(self, request):
+        """
+        Возвращает или обновляет профиль текущего пользователя.
+        """
         user = request.user
         if request.method == 'GET':
             return Response(self.get_serializer(user).data)
@@ -166,21 +185,14 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-# class CurrentUserView(generics.RetrieveUpdateAPIView):
-
-#     serializer_class = UserMeSerializer
-#     permission_classes = [IsAuthenticatedUser,]
-
-#     def get_object(self):
-#         return self.request.user
-
-
 class BaseSlugViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    """Базовый ViewSet для моделей со slug."""
+
     pagination_class = PageNumberPagination
     permission_classes = [IsAdminUserOrReadOnly]
     lookup_field = 'slug'
@@ -190,16 +202,22 @@ class BaseSlugViewSet(
 
 
 class CategoryViewSet(BaseSlugViewSet):
+    """ViewSet для работы с категориями."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(BaseSlugViewSet):
+    """ViewSet для работы с жанрами."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """ViewSet для работы с произведениями."""
+
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).order_by(*Title._meta.ordering)

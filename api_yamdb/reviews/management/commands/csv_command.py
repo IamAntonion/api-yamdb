@@ -9,6 +9,7 @@ from reviews.models import Category, Genre, Title, User, Review, Comment
 
 DATA_DIR = os.path.join(settings.BASE_DIR, 'static', 'data')
 
+
 class Command(BaseCommand):
     help = 'Загрузка данных из CSV файлов'
 

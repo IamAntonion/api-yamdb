@@ -4,19 +4,16 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.utils.crypto import get_random_string
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.conf import settings
 
 from reviews.models import (
     Category,
     Genre,
     Title,
     Review,
-    Comment,
-    ROLE_CHOICES
-    # User
+    Comment
 )
-
-
-from .utils import send_confurm_mail
 
 import re
 
@@ -25,18 +22,24 @@ User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Сериализатор категорий."""
+
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Сериализатор жанров."""
+
     class Meta:
         model = Genre
         fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений."""
+
     genre = GenreSerializer(
         many=True,
         read_only=True
@@ -63,6 +66,8 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений для создания и редактирования."""
+
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
@@ -89,12 +94,19 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов."""
+
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
     )
 
     def validate(self, data):
+        """
+        Проверяет уникальность отзыва пользователя на произведение.
+
+        Пользователь может оставить только один отзыв на одно произведение.
+        """
         request = self.context.get('request')
 
         if request.method != 'POST':
@@ -114,6 +126,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев."""
+
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
@@ -125,6 +139,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.Serializer):
+    """Сериализатор регистрации пользователя."""
 
     username = serializers.CharField(
         max_length=150,
@@ -136,6 +151,14 @@ class SignUpSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs):
+        """
+        Проверяет корректность username и email.
+
+        Проверка:
+        - запрещенные символы;
+        - имя "me";
+        - уникальность.
+        """
         username = attrs.get('username')
         email = attrs.get('email')
         errors = {}
@@ -167,6 +190,11 @@ class SignUpSerializer(serializers.Serializer):
         raise serializers.ValidationError(errors)
 
     def create(self, validated_data):
+        """
+        Создает пользователя и отправляет confirmation_code.
+
+        Если пользователь существует отправляет confirmation code.
+        """
         username = validated_data['username']
         email = validated_data['email']
         try:
@@ -181,12 +209,21 @@ class SignUpSerializer(serializers.Serializer):
             )
         user.confirmation_code = get_random_string(length=40)
         user.save()
-        send_confurm_mail(user.confirmation_code,
-                          (validated_data['email']))
+
+        send_mail(
+            subject='Ваш верификационный код',
+            message=f'Ваш код: {user.confirmation_code}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=(validated_data['email'],),
+            fail_silently=False,
+        )
+
         return user
 
 
 class TokenSerializer(serializers.Serializer):
+    """Сериализатор получения JWT-токена."""
+
     username = serializers.CharField(
         max_length=150,
         required=True,
@@ -196,6 +233,11 @@ class TokenSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
+        """
+        Проверяет confirmation_code пользователя.
+
+        Если код корректный - очищает его и возвращает пользователя.
+        """
         username = data.get('username')
         code = data.get('confirmation_code')
         user = get_object_or_404(User, username=username)
@@ -206,26 +248,9 @@ class TokenSerializer(serializers.Serializer):
         else:
             raise serializers.ValidationError('Неверный confirmation_code')
 
-    # def validate(self, data):
-    #     username = data.get('username')
-    #     code = data.get('confirmation_code')
-
-    #     try:
-    #         user = User.objects.get(username=username)
-    #     except User.DoesNotExist:
-    #         raise serializers.ValidationError(
-    #             'Пользователь не найден'
-    #         )
-
-    #     if user.confirmation_code != code:
-    #         raise serializers.ValidationError(
-    #             'Неверный confirmation_code'
-    #         )
-
-    #     return {'user': user}
-
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор пользователя."""
     class Meta:
         model = User
         fields = ('username',
@@ -239,26 +264,3 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop('role', None)
         return super().update(instance, validated_data)
-
-
-
-class UserMeSerializer(serializers.ModelSerializer):
-    read_only_fields = ('username', 'email', 'role')
-
-    class Meta:
-        model = User
-        fields = ('id',
-                  'username',
-                  'email',
-                  'first_name',
-                  'last_name',
-                  'date_joined',
-                  'role')
-        read_only_fields = ('id', 'username', 'date_joined', 'role')
-        extra_kwargs = {
-            'email': {'required': False},
-            'first_name': {'required': False},
-            'last_name': {'required': False},
-        }
-
-    

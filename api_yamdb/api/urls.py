@@ -2,7 +2,6 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    # CurrentUserView,
     SignUpView,
     TokenView,
     UserViewSet,
@@ -53,7 +52,6 @@ auth_patterns = [
 ]
 
 urlpatterns = [
-    # path(f'{VERSION_PREFIX}/users/me/', CurrentUserView.as_view(), name='users_me'),
     path(f'{VERSION_PREFIX}/', include(router_v1.urls)),
     path(f'{VERSION_PREFIX}/auth/', include(auth_patterns)),
 ]
