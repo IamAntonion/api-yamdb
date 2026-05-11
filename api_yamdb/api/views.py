@@ -65,14 +65,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_title(self):
         """Возвращает произведение."""
+
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_queryset(self):
         """Возвращает список комметариев к произведению."""
+
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         """Сохраняет произведение."""
+
         serializer.save(author=self.request.user, title=self.get_title())
 
 
@@ -91,6 +94,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_review(self):
         """Возвращает отзыв."""
+
         return get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
@@ -99,10 +103,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Возвращает список комметариев к отзыву."""
+
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         """Сохраняет комментарий."""
+
         serializer.save(author=self.request.user, review=self.get_review())
 
 
@@ -117,6 +123,7 @@ class SignUpView(generics.CreateAPIView):
 
         Возвращает username и email.
         """
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -136,6 +143,7 @@ class TokenView(generics.GenericAPIView):
 
     def post(self, request):
         """Проверяет confirmation_code и выдает JWT-токен"""
+
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -169,9 +177,8 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticatedUser]
     )
     def self_account(self, request):
-        """
-        Возвращает или обновляет профиль текущего пользователя.
-        """
+        """Возвращает или обновляет профиль текущего пользователя."""
+
         user = request.user
         if request.method == 'GET':
             return Response(self.get_serializer(user).data)
@@ -221,7 +228,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).order_by(*Title._meta.ordering)
-    serializer_class = TitleSerializer
     permission_classes = [IsAdminUserOrReadOnly]
     filter_backends = [
         filters.OrderingFilter,

@@ -1,7 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.utils.timezone import now
 
 ROLE_CHOICES = [
     ('user', 'User'),
@@ -57,8 +57,8 @@ class SlugModel(models.Model):
         verbose_name = 'Общая модель'
         verbose_name_plural = 'Общие модели'
 
-        def __str__(self):
-            return self.name
+    def __str__(self):
+        return self.name
 
 
 class Category(SlugModel):
@@ -79,6 +79,11 @@ class Title(models.Model):
         verbose_name='Название'
     )
     year = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(-32768),
+            MaxValueValidator(now().year)
+        ],
+        db_index=True,
         verbose_name='Год выпуска'
     )
     description = models.TextField(
@@ -138,10 +143,13 @@ class Review(models.Model):
         ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'title'],
+                fields=('author', 'title'),
                 name='unique_review'
             )
         ]
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
@@ -169,4 +177,5 @@ class Comment(models.Model):
         verbose_name_plural = 'Комментарии'
         ordering = ('-pub_date',)
 
-    from django.db import models
+    def __str__(self):
+        return self.text

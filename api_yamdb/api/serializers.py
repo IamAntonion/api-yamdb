@@ -71,7 +71,8 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=Genre.objects.all(),
-        many=True
+        many=True,
+        allow_empty=False
     )
     category = serializers.SlugRelatedField(
         slug_field='slug',
@@ -113,11 +114,14 @@ class ReviewSerializer(serializers.ModelSerializer):
             return data
 
         author = request.user
-        title_id = self.context.get('view').kwargs.get('title_id')
-        if Review.objects.filter(author=author, title_id=title_id).exists():
+
+        title = self.context.get('view').get_title()
+
+        if title.reviews.filter(author=author).exists():
             raise serializers.ValidationError(
                 'Вы уже оставили отзыв на это произведение.'
             )
+
         return data
 
     class Meta:
