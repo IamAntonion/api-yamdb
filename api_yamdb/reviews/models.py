@@ -46,11 +46,13 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.is_admin or self.is_superuser or self.is_staff
+        return (self.role == self.Role.ADMIN
+                or self.is_superuser
+                or self.is_staff)
 
     @property
     def is_moderator(self):
-        return self.is_moderator
+        return self.role == self.Role.MODERATOR
 
     def __str__(self):
         return self.username
