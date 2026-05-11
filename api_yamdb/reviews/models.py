@@ -1,39 +1,58 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (MaxValueValidator,
+                                    MinValueValidator)
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
+
+from . import constants
 
 
-ROLE_CHOICES = [
-    ('user', 'User'),
-    ('admin', 'Admin'),
-    ('moderator', 'Moderator'),
-]
+def not_me_validator(value):
+    if value == 'me':
+        raise ValidationError('Имя "me" запрещено.')
 
 
 class User(AbstractUser):
+
+    class Role(models.TextChoices):
+        USER = 'user', 'Пользователь'
+        MODERATOR = 'moderator', 'Модератор'
+        ADMIN = 'admin', 'Администратор'
+
+    username = models.CharField(
+        max_length=constants.USERNAME_MAX_LENTGH,
+        unique=True,
+        validators=[UnicodeUsernameValidator(), not_me_validator]
+    )
     email = models.EmailField(unique=True)
     confirmation_code = models.SlugField(default='0',)
-    is_moderator = models.BooleanField(default=False)
+    # is_moderator = models.BooleanField(default=False)
     bio = models.TextField(
-        max_length=500,
+        max_length=constants.BIO_MAX_LENGTH,
         blank=True,
-        verbose_name="О себе"
+        verbose_name='О себе'
     )
 
     role = models.CharField(
         max_length=20,
-        choices=ROLE_CHOICES,
-        default='user',
-        verbose_name="Роль"
+        choices=Role.choices,
+        default=Role.USER,
+        verbose_name='Роль'
     )
+
+    class Meta:
+        ordering = ['id']
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_superuser or self.is_staff
+        return (self.role == self.Role.ADMIN
+                or self.is_superuser
+                or self.is_staff)
 
     @property
     def is_moderator(self):
-        return self.role == 'moderator'
+        return self.role == self.Role.MODERATOR
 
     def __str__(self):
         return self.username
