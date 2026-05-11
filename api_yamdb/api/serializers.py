@@ -169,9 +169,9 @@ class SignUpSerializer(serializers.Serializer):
 
         invalid_chars = re.findall(r'[^\w.@+-]', username)
         if invalid_chars:
+            forbidden_chars = ''.join(set(invalid_chars))
             raise ValidationError(
-                f'Недопустимый username. Запрещенные символы:'
-                f'{"".join(set(invalid_chars))}'
+                f'Недопустимый username. Запрещенные символы: {forbidden_chars}'
             )
 
         if username == 'me' or '$' in username:
@@ -245,16 +245,16 @@ class TokenSerializer(serializers.Serializer):
         username = data.get('username')
         code = data.get('confirmation_code')
         user = get_object_or_404(User, username=username)
-        if user.confirmation_code == code:
-            user.confirmation_code = ''
-            user.save()
-            return user
-        else:
+        if user.confirmation_code != code:
             raise serializers.ValidationError('Неверный confirmation_code')
+        user.confirmation_code = ''
+        user.save()
+        return user
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор пользователя."""
+
     class Meta:
         model = User
         fields = ('username',
@@ -266,5 +266,6 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'date_joined')
 
     def update(self, instance, validated_data):
-        validated_data.pop('role', None)
-        return super().update(instance, validated_data)
+        cleaned_data = validated_data.copy()
+        cleaned_data.pop('role', None)
+        return super().update(instance, cleaned_data)

@@ -17,7 +17,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import TitleFilter
-from .pagination import UserPagination
 from .permissions import (
     IsAdmin,
     IsAdminUserOrReadOnly,
@@ -129,8 +128,8 @@ class SignUpView(generics.CreateAPIView):
         user = serializer.save()
         return Response(
             {
-                "email": user.email,
-                "username": user.username
+                'email': user.email,
+                'username': user.username
             },
             status=status.HTTP_200_OK
         )
@@ -167,14 +166,13 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = 'username'
     search_fields = ('username',)
-    pagination_class = UserPagination
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
         detail=False,
-        methods=['get', 'patch'],
+        methods=('get', 'patch',),
         url_path='me',
-        permission_classes=[IsAuthenticatedUser]
+        permission_classes=(IsAuthenticatedUser,)
     )
     def self_account(self, request):
         """Возвращает или обновляет профиль текущего пользователя."""

@@ -3,6 +3,7 @@ from rest_framework import permissions
 
 class IsAdmin(permissions.BasePermission):
     """Разрешение только для администратора."""
+
     def has_permission(self, request, view):
         user = request.user
         return (
@@ -13,12 +14,14 @@ class IsAdmin(permissions.BasePermission):
 
 class IsAuthenticatedUser(permissions.BasePermission):
     """Разрешение только для авторизированного пользователя."""
+
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
 
 
 class IsAuthorModeratorAdminOrReadOnly(permissions.BasePermission):
     """Разришение на полное чтение и запись ограниченным лицам."""
+
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
@@ -36,7 +39,8 @@ class IsAuthorModeratorAdminOrReadOnly(permissions.BasePermission):
 
 
 class IsAdminUserOrReadOnly(IsAdmin):
-    """Чтение всем, остальное для админа"""
+    """Чтение всем, остальное для админа."""
+
     def has_permission(self, request, view):
         return (
             request.method in permissions.SAFE_METHODS
