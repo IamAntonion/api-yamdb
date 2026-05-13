@@ -61,12 +61,12 @@ class User(AbstractUser):
 
 class SlugModel(models.Model):
     name = models.CharField(
-        max_length=256,
+        max_length=constants.SLUG_NAME_MAX_LENGTH,
         verbose_name='Название',
         unique=True
     )
     slug = models.SlugField(
-        max_length=50,
+        max_length=constants.SLUG_MAX_LENGTH,
         verbose_name='Слаг',
         unique=True
     )
@@ -95,12 +95,12 @@ class Genre(SlugModel):
 
 class Title(models.Model):
     name = models.CharField(
-        max_length=256,
+        max_length=constants.TITLE_MAX_LENTGH,
         verbose_name='Название'
     )
     year = models.PositiveIntegerField(
         validators=[
-            MinValueValidator(-32768),
+            MinValueValidator(constants.YEAR_MIN_VALUE),
             MaxValueValidator(now().year)
         ],
         db_index=True,

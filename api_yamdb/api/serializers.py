@@ -171,7 +171,10 @@ class SignUpSerializer(serializers.Serializer):
         if invalid_chars:
             forbidden_chars = ''.join(set(invalid_chars))
             raise ValidationError(
-                f'Недопустимый username. Запрещенные символы: {forbidden_chars}'
+                (
+                    'Недопустимый username. '
+                    f'Запрещенные символы: {forbidden_chars}'
+                )
             )
 
         if username == 'me' or '$' in username:
