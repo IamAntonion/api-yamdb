@@ -8,6 +8,7 @@ from django.utils.timezone import now
 
 from . import constants
 
+
 def not_me_validator(value):
     if value == 'me':
         raise ValidationError('Имя "me" запрещено.')
