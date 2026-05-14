@@ -24,11 +24,17 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=constants.USERNAME_MAX_LENTGH,
         unique=True,
-        validators=[UnicodeUsernameValidator(), not_me_validator]
+        validators=[UnicodeUsernameValidator(), not_me_validator],
+        verbose_name='Имя пользователя'
     )
-    email = models.EmailField(unique=True)
-    confirmation_code = models.SlugField(default='0',)
-    # is_moderator = models.BooleanField(default=False)
+    email = models.EmailField(
+        unique=True,
+        verbose_name='Электронная почта'
+    )
+    confirmation_code = models.SlugField(
+        default='0',
+        verbose_name='Код подтверждения'
+    )
     bio = models.TextField(
         max_length=constants.BIO_MAX_LENGTH,
         blank=True,
@@ -36,14 +42,15 @@ class User(AbstractUser):
     )
 
     role = models.CharField(
-        max_length=20,
+        max_length=constants.ROLE_MAX_LENGTH,
         choices=Role.choices,
         default=Role.USER,
         verbose_name='Роль'
     )
 
     class Meta:
-        ordering = ['id']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     @property
     def is_admin(self):
@@ -53,7 +60,8 @@ class User(AbstractUser):
 
     @property
     def is_moderator(self):
-        return self.role == self.Role.MODERATOR
+        return (self.role == self.Role.MODERATOR
+                or self.is_superuser)
 
     def __str__(self):
         return self.username
@@ -98,7 +106,7 @@ class Title(models.Model):
         max_length=constants.TITLE_MAX_LENTGH,
         verbose_name='Название'
     )
-    year = models.PositiveIntegerField(
+    year = models.SmallIntegerField(
         validators=[
             MinValueValidator(constants.YEAR_MIN_VALUE),
             MaxValueValidator(now().year)
@@ -141,8 +149,14 @@ class Review(models.Model):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[
-            MinValueValidator(1, 'Оценка не может быть меньше 1'),
-            MaxValueValidator(10, 'Оценка не может быть больше 10')
+            MinValueValidator(
+                constants.SCORE_MIN_VALUE,
+                'Оценка не может быть меньше 1'
+            ),
+            MaxValueValidator(
+                constants.SCORE_MAX_VALUE,
+                'Оценка не может быть больше 10'
+            )
         ]
     )
     pub_date = models.DateTimeField(
