@@ -55,12 +55,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly
     )
 
-    http_method_names = [
+    http_method_names = (
         'get',
         'post',
         'patch',
         'delete'
-    ]
+    )
 
     def get_title(self):
         """Возвращает произведение."""
@@ -84,12 +84,12 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorModeratorAdminOrReadOnly,)
 
-    http_method_names = [
+    http_method_names = (
         'get',
         'post',
         'patch',
         'delete'
-    ]
+    )
 
     def get_review(self):
         """Возвращает отзыв."""
@@ -141,7 +141,7 @@ class TokenView(generics.GenericAPIView):
     serializer_class = TokenSerializer
 
     def post(self, request):
-        """Проверяет confirmation_code и выдает JWT-токен"""
+        """Проверяет confirmation_code и выдает JWT-токен."""
 
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -166,7 +166,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     lookup_field = 'username'
     search_fields = ('username',)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(
         detail=False,
@@ -203,7 +203,7 @@ class BaseSlugViewSet(
     lookup_field = 'slug'
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-    http_method_names = ['get', 'post', 'delete', 'head', 'options']
+    http_method_names = ('get', 'post', 'delete', 'head', 'options')
 
 
 class CategoryViewSet(BaseSlugViewSet):
@@ -233,7 +233,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     ]
     filterset_class = TitleFilter
     pagination_class = PageNumberPagination
-    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+    http_method_names = ('get', 'post', 'patch', 'delete', 'head', 'options')
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update', 'update'):
